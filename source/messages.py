@@ -47,3 +47,9 @@ class Messages:
         print(f"{self.FAIL}[X] The length of the line", line_id+1, "must not "
                 "exceed 72 characters.")
         self.error = 1
+
+
+    def error_min_length_message(self, line_id):
+        print(f"{self.FAIL}[X] The length of the line {line_id} must contains "
+                "at least 60 characters.")
+        self.error = 1

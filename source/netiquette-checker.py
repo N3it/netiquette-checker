@@ -1,4 +1,4 @@
-import sys
+import sys, copy
 import re
 from messages import Messages
 
@@ -43,11 +43,29 @@ def readfile(filename):
     return message
 
 
+def get_body(lines):
+    body = []
+    # starts after salutations
+    for i in range(2, len(lines)):
+        line = lines[i]
+        if line == "" and lines[i+1] == "-- ":
+            break
+        else:
+            body.append(line)
+    # remove the signature
+    return body[:-2]
+
+
 def check_max_length_message(lines):
     for i in range(len(lines)):
         line = lines[i]
         if len(line) > 72:
             messages.error_max_length_message(i)
+    body = get_body(lines)
+    for i in range(len(body) - 1):
+        line = body[i]
+        if line != "" and len(line) < 60:
+            messages.error_min_length_message(i + 3)
 
 
 def check_signature(lines):
