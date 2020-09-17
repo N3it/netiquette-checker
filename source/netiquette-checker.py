@@ -23,6 +23,19 @@ def error_courtesy():
     sys.exit()
 
 
+def error_trailing_whitespaces(line):
+    print("Error: some trailing whitespaces have been found:")
+    print(line)
+    sys.exit()
+
+
+def check_trailing_whitespaces(s):
+    l = s.split("\n")
+    for line in l:
+        if len(line) > 0 and line[-1] == " " and line != "-- ":
+            error_trailing_whitespaces(line)
+
+
 def parse_subject(subject):
     splitted = subject.split(" ")
     tags, summary = splitted[0], " ".join(splitted[1:])
@@ -45,6 +58,7 @@ def check_subject(subject):
     else:
         tags, summary = parse_subject(subject)
         check_tags(tags, summary)
+        check_trailing_whitespaces(subject)
 
 
 def readfile(filename):
@@ -86,6 +100,7 @@ def check_courtesy(lines, signature_index):
 def check_message(message):
     paragraphs = message.split("\n")
     check_length(paragraphs)
+    check_trailing_whitespaces(message)
     signature_index = check_signature(paragraphs)
     check_courtesy(paragraphs, signature_index)
 
