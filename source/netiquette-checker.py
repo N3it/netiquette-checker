@@ -1,32 +1,57 @@
 import sys
 import re
 
+class colors:
+    SUCCESS = '\033[92m'
+    WARNING = '\033[93m'
+    ERROR = '\033[91m'
+    ENDC = '\033[0m'
+
 TAGS_REGEX = re.compile(r"^(\[[A-Z0-9-_+/]*\])*$")
+ERROR = 0
 
 def help():
     print("USAGE: python3", sys.argv[0], "SUBJECT FILE")
     sys.exit()
 
 
+def success():
+    print(f"{colors.SUCCESS}[OK] Your message not contain any syntax errors")
+
+
 def error_tags():
-    print("Incorrect tags. Your tags must respect the following rules:")
-    print("tag-id = 1*(UPPER / DIGIT / \"-\", \"_\" / \"+\" / \"/\")")
-    print("tags = 2( \"[\" tag-id \"]\" )")
-    sys.exit()
+    print(f"{colors.ERROR}[X] Your tags must respect the following rules:\n"
+          "    tag-id = 1*(UPPER / DIGIT / \"-\", \"_\" / \"+\" / \"/\")\n"
+          "    tags = 2( \"[\" tag-id \"]\" )")
+    ERROR = 1
+
+
+def error_signature():
+    print(f"{colors.ERROR}[X] Your message must have a signature. "
+           "A signature starts with \"--\" SPACE CRLF")
+    ERROR = 1
 
 
 def error_courtesy():
-    print("Error: missing or incorrect common courtesy.\n"
-          "Common courtesy must end with a comma and you must separate "
-          "the main content of your message from greetings and "
-          "salutations with empty lines (one above, one below).")
-    sys.exit()
+    print(f"{colors.ERROR}[X] Missing or incorrect common courtesy.")
+    ERROR = 1
 
 
-def error_trailing_whitespaces(line):
-    print("Error: some trailing whitespaces have been found:")
-    print(line)
-    sys.exit()
+def error_trailing_whitespaces(line_id):
+    print(f"{colors.ERROR}[X] Trailing whitespaces must not be used on line", 
+            line_id+1)
+    ERROR = 1
+
+
+def error_max_length_subject():
+    print(f"{colors.ERROR}[X] The length of your subject must not exceed 80 "
+           "characters.")
+    ERROR = 1
+
+def error_max_length_message(line_id):
+    print(f"{colors.ERROR}[X] The length of the line", line_id+1, "must not "
+           "exceed 72 characters.")
+    ERROR = 1
 
 
 def check_trailing_whitespaces(s):
@@ -45,20 +70,14 @@ def parse_subject(subject):
 def check_tags(tags, summary):
     if not re.fullmatch(TAGS_REGEX, tags):
         error_tags() 
-    l = summary.split(" ")
-    for e in l:
-        if re.fullmatch(TAGS_REGEX, e):
-            error_tags()
 
 
 def check_subject(subject):
     if len(subject) > 80:
-        print("The length of the subject must not exceed 80 characters.")
-        sys.exit()
-    else:
-        tags, summary = parse_subject(subject)
-        check_tags(tags, summary)
-        check_trailing_whitespaces(subject)
+        error_max_length_subject()
+    tags, summary = parse_subject(subject)
+    check_tags(tags, summary)
+    check_trailing_whitespaces(subject)
 
 
 def readfile(filename):
@@ -68,41 +87,41 @@ def readfile(filename):
     return message
 
 
-def check_length(lines):
-    for i in range(len(lines) - 1):
+def check_max_length_message(lines):
+    for i in range(len(lines)):
         line = lines[i]
-        if len(line) > 80:
-            print("Error: the length of a column must not exceed 80 characters.")
-            print(line)
-            sys.exit()
+        if len(line) > 72:
+            error_max_length_message(i)
 
 
 def check_signature(lines):
     try:
         i = lines.index("-- ")
+        return i
     except:
-        print("Error: your message must have a signature.\n"
-              "A signature starts with \"--\" SPACE CRLF")
-        sys.exit()
-    return i
+        error_signature()
+        return -1
 
 
 def check_courtesy(lines, signature_index):
-    i = signature_index - 2 
-    greet, salutations = lines[0], lines[i]
-    if greet[-1] != "," or lines[1] != "":
+    if signature_index == -1:
         error_courtesy()
-    if (len(salutations) < 2 or salutations[-1] != "," 
-        or lines[i-1] != "" or lines[i+1] != ""):
-        error_courtesy()
+    else:
+        i = signature_index - 2 
+        greet, salutations = lines[0], lines[i]
+        if greet[-1] != "," or lines[1] != "":
+            error_courtesy()
+        if (len(salutations) < 2 or salutations[-1] != "," 
+            or lines[i-1] != "" or lines[i+1] != ""):
+            error_courtesy()
 
 
 def check_message(message):
     paragraphs = message.split("\n")
-    check_length(paragraphs)
     check_trailing_whitespaces(message)
     signature_index = check_signature(paragraphs)
     check_courtesy(paragraphs, signature_index)
+    check_max_length_message(paragraphs)
 
 
 def main():
@@ -115,12 +134,8 @@ def main():
 
         check_subject(subject)
         check_message(message)
-
-        print("Your message is ready to be sent.\n"
-              "However, keep in mind that this program does not cover all the " 
-              "rules described in the manuel.\n"
-              "For more details: "
-              "https://github.com/N3it/netiquette-checker/netiquette.pdf")
+        if ERROR == 0:
+            success()
 
 
 if __name__ == "__main__":
