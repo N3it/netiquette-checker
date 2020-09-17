@@ -36,7 +36,27 @@ def check_subject(subject):
     else:
         tags, summary = parse_subject(subject)
         check_tags(tags, summary)
-        print("OK")
+
+
+def readfile(filename):
+    f = open(filename, 'r')
+    message = f.read()
+    f.close()
+    return message
+
+
+def check_length(lines):
+    for i in range(len(lines) - 1):
+        line = lines[i]
+        if len(line) > 80:
+            print("Error: the length of a column must not exceed 80 characters.")
+            print(line)
+            sys.exit()
+
+
+def check_message(message):
+    paragraphs = message.split("\n")
+    check_length(paragraphs)
 
 
 def main():
@@ -45,7 +65,17 @@ def main():
     else:
         subject = sys.argv[1]
         filename = sys.argv[2]
+        message = readfile(filename)
+
         check_subject(subject)
+        check_message(message)
+
+        print("Your message is ready to be sent.\n"
+              "However, keep in mind that this program does not cover all the " 
+              "rules described in the manuel.\n"
+              "For more details: "
+              "https://github.com/N3it/netiquette-checker/netiquette.pdf")
+
 
 if __name__ == "__main__":
     main()
