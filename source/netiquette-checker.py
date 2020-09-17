@@ -14,6 +14,15 @@ def error_tags():
     print("tags = 2( \"[\" tag-id \"]\" )")
     sys.exit()
 
+
+def error_courtesy():
+    print("Error: missing or incorrect common courtesy.\n"
+          "Common courtesy must end with a comma and you must separate "
+          "the main content of your message from greetings and "
+          "salutations with empty lines (one above, one below).")
+    sys.exit()
+
+
 def parse_subject(subject):
     splitted = subject.split(" ")
     tags, summary = splitted[0], " ".join(splitted[1:])
@@ -54,9 +63,31 @@ def check_length(lines):
             sys.exit()
 
 
+def check_signature(lines):
+    try:
+        i = lines.index("-- ")
+    except:
+        print("Error: your message must have a signature.\n"
+              "A signature starts with \"--\" SPACE CRLF")
+        sys.exit()
+    return i
+
+
+def check_courtesy(lines, signature_index):
+    i = signature_index - 2 
+    greet, salutations = lines[0], lines[i]
+    if greet[-1] != "," or lines[1] != "":
+        error_courtesy()
+    if (len(salutations) < 2 or salutations[-1] != "," 
+        or lines[i-1] != "" or lines[i+1] != ""):
+        error_courtesy()
+
+
 def check_message(message):
     paragraphs = message.split("\n")
     check_length(paragraphs)
+    signature_index = check_signature(paragraphs)
+    check_courtesy(paragraphs, signature_index)
 
 
 def main():
