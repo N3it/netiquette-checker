@@ -30,3 +30,4 @@ FILE is the path to a file containing your message content.*
 ## TODO
 
 * Quoting & Reply syntax
+* In some cases, it is not possible to follow the minimum size limits, the program does not manage them yet.
